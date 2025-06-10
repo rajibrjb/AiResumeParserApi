@@ -1,0 +1,14 @@
+node_modules
+npm-debug.log
+dist
+coverage
+.env
+.git
+.gitignore
+README.md
+.eslintrc.js
+.prettierrc
+jest.config.js
+*.test.ts
+__tests__
+logs
