@@ -157,22 +157,24 @@ AZURE_OPENAI_DEPLOYMENT=your_deployment_name
 ---
 
 ## 🏗️ Architecture
-
+The project follows a clean and modular structure based on SOLID principles, ensuring maintainability, scalability, and ease of testing.
 \`\`\`
+
 src/
-├── config/           # Configuration management
-├── controllers/      # Request handlers
-├── interfaces/       # TypeScript interfaces
-├── middleware/       # Express middleware
-├── routes/          # API routes
-├── services/        # Business logic
-│   ├── ai/         # AI service implementations
-│   │   ├── base/   # Base AI parser class
-│   │   └── providers/ # Specific AI providers
+├── config/                      # Configuration management
+├── controllers/                 # Request handlers
+├── interfaces/                  # TypeScript interfaces
+├── middleware/                  # Express middleware
+├── routes/                      # API routes
+├── services/                    # Business logic
+│   ├── ai/                     # AI service implementations
+│   │   ├── base/               # Base AI parser class
+│   │   └── providers/          # Specific AI providers
 │   └── documentProcessor.service.ts
-├── types/           # TypeScript type definitions
-├── utils/           # Utility functions
-└── __tests__/       # Test files
+├── types/                       # TypeScript type definitions
+├── utils/                       # Utility functions
+└── tests/                       # Test files
+
 \`\`\`
 
 ---
