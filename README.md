@@ -158,8 +158,8 @@ AZURE_OPENAI_DEPLOYMENT=your_deployment_name
 
 ## 🏗️ Architecture
 The project follows a clean and modular structure based on SOLID principles, ensuring maintainability, scalability, and ease of testing.
-\`\`\`
-
+<details>
+<summary>📁 Project Structure</summary>
 src/
 ├── config/                      # Configuration management
 ├── controllers/                 # Request handlers
@@ -175,7 +175,7 @@ src/
 ├── utils/                       # Utility functions
 └── tests/                       # Test files
 
-\`\`\`
+</details>
 
 ---
 
