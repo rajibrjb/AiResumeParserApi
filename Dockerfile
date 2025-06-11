@@ -2,9 +2,14 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
+# Install curl for health checks
+RUN apk add --no-cache curl
+
 # Copy package files
 COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+
+# Install ALL dependencies (including dev dependencies for build)
+RUN npm ci && npm cache clean --force
 
 # Copy source code
 COPY . .
@@ -17,21 +22,43 @@ FROM node:18-alpine AS production
 
 WORKDIR /app
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nextjs -u 1001
+# Install curl for health checks
+RUN apk add --no-cache curl
 
-# Copy built application
-COPY --from=builder --chown=nextjs:nodejs /app/dist ./dist
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+# Copy package files for production install
+COPY package*.json ./
+
+# Install only production dependencies
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy built application from builder stage
+COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
+
+# Create inline health check script
+RUN echo 'const http = require("http"); \
+const options = { host: "localhost", port: process.env.PORT || 3000, path: "/health", timeout: 2000 }; \
+const request = http.request(options, (res) => { \
+  if (res.statusCode === 200) { process.exit(0); } else { process.exit(1); } \
+}); \
+request.on("error", () => { process.exit(1); }); \
+request.on("timeout", () => { request.destroy(); process.exit(1); }); \
+request.end();' > healthcheck.js && \
+chown nodejs:nodejs healthcheck.js
+
+# Create necessary directories
+RUN mkdir -p uploads data && \
+    chown -R nodejs:nodejs /app
 
 # Switch to non-root user
-USER nextjs
+USER nodejs
 
 EXPOSE 3000
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node dist/healthcheck.js
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD node healthcheck.js
 
-CMD ["npm", "start"]
+CMD ["node", "dist/server.js"]

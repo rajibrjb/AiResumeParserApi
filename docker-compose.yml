@@ -3,18 +3,39 @@ version: '3.8'
 services:
   resume-parser-api:
     build: .
+    container_name: resume-parser-api
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
       - PORT=3000
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     env_file:
       - .env
     restart: unless-stopped
+    depends_on:
+      - redis
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      test: ["CMD", "node", "healthcheck.js"]
       interval: 30s
       timeout: 10s
       retries: 3
     volumes:
       - ./uploads:/app/uploads
+      - ./data:/app/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis-rate-limit
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  redis-data:

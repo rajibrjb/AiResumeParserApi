@@ -1,42 +1,25 @@
-import { Router, Request, Response } from 'express';
-import { ApiResponse } from '../types/resume.types';
+// src/routes/healthRoutes.ts
+import { Router } from 'express';
+import { HealthController } from '../controllers/health.controller';
+import { RateLimitController } from '../controllers/rateLimit.controller';
 
 const router = Router();
+const healthController = new HealthController();
+const rateLimitController = new RateLimitController();
 
-interface HealthData {
-  status: string;
-  timestamp: string;
-  uptime: number;
-  environment: string;
-  version: string;
-}
+// Basic health check - compatible with your existing script
+router.get('/', healthController.getHealth);
 
-router.get('/', (req: Request, res: Response<ApiResponse<HealthData>>) => {
-  const healthData: HealthData = {
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development',
-    version: process.env.npm_package_version || '1.0.0'
-  };
+// Kubernetes/Docker health checks
+router.get('/live', healthController.getLive);       // Liveness probe
+router.get('/ready', healthController.getReady);     // Readiness probe
 
-  const response: ApiResponse<HealthData> = {
-    success: true,
-    data: healthData,
-    message: 'Service is healthy'
-  };
+// Detailed system status
+router.get('/status', healthController.getStatus);
 
-  res.status(200).json(response);
-});
-
-router.get('/ready', (req: Request, res: Response<ApiResponse<{ ready: boolean }>>): void => {
-  const response: ApiResponse<{ ready: boolean }> = {
-    success: true,
-    data: { ready: true },
-    message: 'Service is ready'
-  };
-
-  res.status(200).json(response);
-});
+// Rate limiting endpoints (optional - for monitoring)
+router.get('/rate-limit/stats', rateLimitController.getStats);
+router.get('/rate-limit/:key', rateLimitController.getStatus);
+router.delete('/rate-limit/:key', rateLimitController.resetLimit);
 
 export { router as healthRoutes };
